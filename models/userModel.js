@@ -3,12 +3,7 @@ const mongoose = require("mongoose");
 const { isEmail } = require("validator");
 
 const userSchema = new mongoose.Schema({
-    prenom: {
-        type: String,
-    },
-    nom:{
-        type:String,
-    },
+   
     email: {
         type: String,
         required: true,
@@ -22,42 +17,13 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    telephone:{
-        type:String,
-    },
-    secteur:{
-        type:mongoose.Types.ObjectId,
-        ref:"secteur"
-    },
-     ville:{
-        type:String,
-        trim:true,
-    },
-    zoneIntervention:{
-        type:String,
-        trim:true,
-    },
-    statut:{
-        type:String,
-        enum:["fremium","premium"]
-    },
+   
     
     role: {
         type: String,
         enum: ["admin", "client", "pro"]
     },
-    bio: {
-        type: String,
-        maxlength: 700,
-    },
-    profil: {
-        type: String,
-        default: "/uploads/profil/random_user.png"
-    },
-    adresse: {
-        type: String,
-      
-    },
+  
 }, {
     timestamps: true
 });

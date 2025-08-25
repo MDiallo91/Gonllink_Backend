@@ -24,6 +24,7 @@ module.exports.getEntreprise= async (req,res)=>{
     try {
         const entreprise = await entrepriseModel.find()
         .populate("user","_id email")
+        .populate("secteur")
         res.status(200).json(entreprise)
     } catch (error) {
         console.log("Erreur lors de la recuperaton de user",error)
@@ -38,6 +39,8 @@ module.exports.entrepriseById = async(req,res)=>{
     }
     try {
         const entreprise = await entrepriseModel.findById(entrepriseId)
+            .populate("secteur","_id email")
+            .populate("user")
         if(!entreprise) res.send("entreprise non trouvé")
         if(entreprise) res.status(200).json(entreprise)
     } catch (error) {
