@@ -12,7 +12,7 @@ module.exports.checkUser = (req, res, next) => {
                 next();
             } else {
                 try {
-                    const user = await UserModel.findById(decodedToken.id);
+                    const user = await UserModel.findById(decodedToken.id).select("-password");
                     res.locals.user = user;
                     req.user = user; // clé pour que req.user soit défini
                     next();

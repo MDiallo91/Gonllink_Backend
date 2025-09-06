@@ -1,5 +1,10 @@
 const mongoose = require("mongoose");
 const UserModel = require("../models/userModel");
+const travailleurModel = require("../models/travailleurModel")
+const entrepriseModel = require("../models/entrepriseModel")
+const clientModal = require("../models/clientModal")
+const adminModel = require("../models/adminModel")
+
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
@@ -13,7 +18,7 @@ const createToken = (id) => {
 
 // Inscription
 module.exports.signUp = async (req, res) => {
-    const {  email, password } = req.body;
+    const {  email, password,role } = req.body;
 
     try {
         // Vérifier si l'utilisateur existe déjà
@@ -25,8 +30,24 @@ module.exports.signUp = async (req, res) => {
 
         const user = await UserModel.create({
             email,
-            password: hashedPassword
+            password: hashedPassword,
+            role
         });
+        
+        //creation de profil lier a user en fonction du role
+
+         let profile;
+
+        if (role === "client") {
+        profile = await clientModal.create({ user: user._id});
+        } else if (role === "independant") {
+        profile = await travailleurModel.create({ user: user._id});
+        } else if (role === "entreprise") {
+        profile = await entrepriseModel.create({ user: user._id});
+        } else if (role === "admin") {
+        profile = await adminModel.create({ user: user._id});
+        }
+
 
         // Créer le token
         const token = createToken(user._id);
@@ -36,9 +57,14 @@ module.exports.signUp = async (req, res) => {
             sameSite: 'strict',
             maxAge
         });
-
-        res.status(201).json({ user: user._id });
+   
+        res.status(201).json({  
+            message: "Utilisateur enregistré avec succès",
+            user,
+            profile
+         });
     } catch (error) {
+         await UserModel.findByIdAndDelete(user._id);
         res.status(400).json({ error: error.message });
     }
 }
@@ -64,7 +90,7 @@ module.exports.signIn = async (req, res) => {
             maxAge
         });
 
-        res.status(200).json({ user: user._id });
+        res.status(200).json({ user: user,status:200,message:"Connexion effectuer avec succes"});
     } catch (error) {
         console.error(`Erreur lors du login: ${error}`);
         res.status(500).json({ message: "Erreur serveur" });

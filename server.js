@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
 const http = require("http"); // nécessaire pour socket.io
+const cors = require("cors");
 const { Server } = require("socket.io");
 const dotenv = require("dotenv").config({ path: "./config/.env" });
 const DBconnect = require("./config/db");
@@ -24,13 +25,26 @@ const initSocket = require("./helper/soket");
 // Connexion à la base de données
 DBconnect();
 
+//Middleware CORS pour Express
+app.use(cors({
+  origin: process.env.CLIENT_URL,
+  credentials: true,            
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+}));
+
 // Middlewares
 app.use(express.json());
 app.use(cookieParser()); // nécessaire pour lire les cookies
 
 app.use(checkUser);
-app.get("/jwtid", requireAuth, (req, res) => {
-  res.status(200).send(res.locals.user._id);
+
+app.get("/jwtid", checkUser, (req, res) => {
+  if (res.locals.user) {
+    res.json({ user: res.locals.user });
+  } else {
+    res.json({ user: null });
+  }
 });
 
 // Routes
@@ -48,8 +62,12 @@ app.use("/api/client", clientRoute);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // autorise toutes les origines, à sécuriser en prod
-    methods: ["GET", "POST"],
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    allowedHeaders: ["sessionId", "Content-Type", "Authorization"],
+    exposedHeaders: ['sessionId'],
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    profligntcontinue: false
   },
 });
 
