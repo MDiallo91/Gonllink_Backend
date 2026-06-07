@@ -22,7 +22,22 @@ const userSchema = new mongoose.Schema({
         enum: ["admin", "client", "independant", "entreprise"],
         default:"independant"
     },
-  
+     profile: { 
+        type: mongoose.Schema.Types.ObjectId,
+         refPath: "roleRef" 
+    },
+    roleRef: {
+    type: String,
+    required: true,
+    enum: ["client","travailleur","entreprise", "admin"]
+    },
+     photo: {
+        type: String,
+        default: "/upload/profil/random_user.png"
+    },
+    isVerified:       { type: Boolean, default: false }, // email confirmé par code
+    verificationCode: { type: String },
+    isActive:         { type: Boolean, default: false }, // activé par l'admin (sauf client : true dès la création)
 }, {
     timestamps: true
 });

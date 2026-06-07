@@ -3,13 +3,13 @@ const objectId = require("mongoose").Types.ObjectId
 
 
 module.exports.addClient = async (req, res) => {
-  const { prenom,nom, user} = req.body;
+  const { prenom,nom} = req.body;
 
   try {
     const client = await clientModal.create({
       nom, 
       prenom,
-      user
+
     });
 
     return res.status(201).json({message:"Ajout effectuer",statut:200, client });
@@ -24,7 +24,6 @@ module.exports.getClient = async (req, res) => {
     const client = await clientModal
       .find()
       .select("-password")        
-      .populate("user")
          
         
 

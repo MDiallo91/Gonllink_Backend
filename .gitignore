@@ -1,2 +1,10 @@
 /config/.env
 /node_modules
+
+# Fichiers uploadés par les utilisateurs (photos, logos...)
+client/public/upload/profil/*
+client/public/upload/realisation/*
+client/public/upload/logo/*
+!client/public/upload/profil/.gitkeep
+!client/public/upload/realisation/.gitkeep
+!client/public/upload/logo/.gitkeep

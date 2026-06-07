@@ -1,12 +1,13 @@
 const express = require("express");
 const app = express();
-const http = require("http"); // nécessaire pour socket.io
+const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
 const dotenv = require("dotenv").config({ path: "./config/.env" });
 const DBconnect = require("./config/db");
 const cookieParser = require("cookie-parser");
 const { checkUser, requireAuth } = require("./midleware/authMidleware");
+const path = require("path");
 
 // Routes
 const userRoute = require("./route/userRoute");
@@ -16,38 +17,37 @@ const entrepriseRoute = require("./route/entrepriseRoute");
 const projetRoute = require("./route/projetRoute");
 const enchereRoute = require("./route/enchererRoute");
 const realisationRoute = require("./route/realisationRoute");
-const chatRoute = require("./route/chatRoute")
-const clientRoute = require("./route/clientRoute")
+const chatRoute = require("./route/chatRoute");
+const clientRoute = require("./route/clientRoute");
+const avisRoute = require("./route/avisRoute");
+const notificationRoute = require("./route/notificationRoute");
+const signalementRoute = require("./route/signalementRoute");
+const adminRoute = require("./route/adminRoute");
+const configRoute = require("./route/configRoute");
+const temoignageRoute = require("./route/temoignageRoute");
 
-// Import socket
 const initSocket = require("./helper/soket");
 
-// Connexion à la base de données
 DBconnect();
 
-//Middleware CORS pour Express
 app.use(cors({
-  origin: process.env.CLIENT_URL,
-  credentials: true,            
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+    origin: process.env.CLIENT_URL,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
-// Middlewares
 app.use(express.json());
-app.use(cookieParser()); // nécessaire pour lire les cookies
-
+app.use(cookieParser());
 app.use(checkUser);
 
+app.use("/upload", express.static(path.join(__dirname, "client/public/upload")));
+
 app.get("/jwtid", checkUser, (req, res) => {
-  if (res.locals.user) {
-    res.json({ user: res.locals.user });
-  } else {
-    res.json({ user: null });
-  }
+    res.json({ user: res.locals.user || null });
 });
 
-// Routes
+// Routes API
 app.use("/api/user", userRoute);
 app.use("/api/secteur", secteurRoute);
 app.use("/api/travailleur", travailleurRoute);
@@ -57,25 +57,25 @@ app.use("/api/enchere", enchereRoute);
 app.use("/api/realisation", realisationRoute);
 app.use("/api/chat", chatRoute);
 app.use("/api/client", clientRoute);
+app.use("/api/avis", avisRoute);
+app.use("/api/notification", notificationRoute);
+app.use("/api/signalement", signalementRoute);
+app.use("/api/admin", adminRoute);
+app.use("/api/config", configRoute);
+app.use("/api/temoignage", temoignageRoute);
 
-// Création du serveur HTTP + socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: {
-    origin: process.env.CLIENT_URL,
-    credentials: true,
-    allowedHeaders: ["sessionId", "Content-Type", "Authorization"],
-    exposedHeaders: ['sessionId'],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    profligntcontinue: false
-  },
+    cors: {
+        origin: process.env.CLIENT_URL,
+        credentials: true,
+        methods: ["GET", "HEAD", "PUT", "PATCH", "POST", "DELETE"],
+    },
 });
 
-// Initialiser socket
 initSocket(io);
 
-// Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`Serveur en écoute sur le port ${PORT}`);
+    console.log(`Serveur en écoute sur le port ${PORT}`);
 });

@@ -1,110 +1,83 @@
-const realisationModel = require("../models/realisationModel")
-const objectId = require("mongoose").Types.ObjectId
+const fs = require("fs/promises");
+const RealisationModel = require("../models/realisationModel");
 
+const path = require("path");
 
-module.exports.addRealisation = async (req, res) => {
-  const { enchere, } = req.body;
-
+module.exports.createRealisation = async (req, res) => {
   try {
-    const realisation = await realisationModel.create({
-        enchere
+    let imagePaths = [];
+
+    if (req.files && req.files.length > 0) {
+      for (let file of req.files) {
+        // Vérifier type
+        if (!["image/png", "image/jpg", "image/jpeg"].includes(file.mimetype)) {
+          throw new Error("Format d'image non accepté");
+        }
+
+        // Vérifier taille (5Mo max)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error("La taille maximale est 5Mo");
+        }
+
+        // Créer nom unique
+        const fileName = `${req.body.realisateur}-${Date.now()}-${file.originalname}`;
+
+        // Chemin absolu de sauvegarde
+        const uploadPath = path.join(__dirname, "../client/public/upload/realisation", fileName);
+
+        // Sauvegarder l'image
+        await fs.writeFile(uploadPath, file.buffer);
+
+        // Stocker chemin relatif (pour frontend)
+        imagePaths.push(`upload/realisation/${fileName}`);
+      }
+    }
+
+    // Créer la réalisation
+    const newRealisation = new RealisationModel({
+      realisateur: req.body.realisateur,
+      description: req.body.description,
+      images: imagePaths,
     });
 
-    return res.status(201).json({message:"Ajout effectuer",statut:200, realisation });
+    const savedRealisation = await newRealisation.save();
+
+    res.status(201).json({
+      status: 200,
+      message: "Enregistrement effectué avec succès",
+      savedRealisation,
+    });
   } catch (error) {
-    console.error("Erreur lors de l'ajout du realisation", error);
-    return res.status(500).send("Erreur serveur");
+    console.error("Erreur lors de la création d'une réalisation :", error);
+    res.status(500).json({ message: error.message });
   }
 };
 
-module.exports.getRealisation = async (req,res)=>{
 
-    try {
-        const realisation = await realisationModel.find()
-            .populate({
-                path: "enchere",            
-                populate: {
-                    path: "projet",           
-                    model: "projet"
-                }
-            });
-        res.status(200).json(realisation)
-    } catch (error) {
-        console.log("Erreur lors de la recuperaton de user",error)
-        res.status(500).send("erreur serveur",error)
-    }
+//afficher les post
+module.exports.getRealisation = async (req, res) => {
+  try {
+    const post = await RealisationModel.find().sort({ createdAt: -1 });//afficher les post par date publication decroissant
+    res.status(200).json(post);
+  } catch (error) {
+    console.log("Erreur lors de la recuperation de post");
+    res.status(500).json(`Erreur serveur ${error}`)
+  }
 }
 
-module.exports.realisationById = async(req,res)=>{
-    const realisationId = req.params.id;
-    if(!objectId.isValid(realisationId)){
-        return res.status(400).send("Id invalide")
-    }
-    try {
-        const realisation = await realisationModel
-        .findById(realisationId)
-        .populate({
-                path: "projet",            
-                populate: {
-                    path: "user",           
-                    model: "user"
-                }
-        });
-        if(!realisation) res.send("realisation non trouvé")
-        if(realisation) res.status(200).json(realisation)
-    } catch (error) {
-        console.error("Erreur leur de la recuperation de realisation",error)
-        res.status(500).send("Erreru serveur",error)
-    }
-}
+//repuerer les post par realisateur
+module.exports.getRealisationById = async (req, res) => {
+  const realisateurId = req.params.id;
+  try {
+    const posts = await RealisationModel.find({ realisateur: realisateurId }).sort({ createdAt: -1 })
+      .populate({
+        path: "realisateur",
+        populate: { path: "profile" }
+      })
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Erreur serveur" });
+  }
+};
 
-module.exports.updateRealisation = async (req,res)=>{
-    const realisationId = req.params.id;
-    if(!objectId.isValid(realisationId)){
-        res.status(400).send("Id invalide")
-    }
-    try {
-        const realisation = await realisationModel.findByIdAndUpdate(
-            realisationId,
-            {$set:req.body},
-            {new:true,runValidators:true}
-        )
-        if(!realisation){
-            res.status(404).json({
-                message:"realisation non trouvé",
-                status: 404
-            })
-        }
-        if(realisation){
-             res.status(200).json({
-                message:"mise a jour effectuer avec succes",
-                status: 200,
-                realisation
-             })
-        }
-    } catch (error) {
-        console.error("Erreur lors de la mise a jour",error);
-        res.status(500).send("Erreur serveur")
-    }
-    
-}
-
-module.exports.deleteRealisation = async (req,res) =>{
-    const realisationId = req.params.id;
-    if(!objectId.isValid(realisationId)){
-        res.status(400).send("Id invalide")
-    }
-    try {
-        const secteur = await realisationModel.findByIdAndDelete({_id:realisationId})
-        if(!secteur){
-            res.status.send("secteur non trouvé")
-        }
-        if(secteur) res.status(200).json({
-            message:"suppression effectuer avec succes"
-        })
-    } catch (error){
-        res.status(500).send("erreur serveur")
-    }
-   
-
-}

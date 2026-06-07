@@ -7,12 +7,19 @@ module.exports.checkUser = (req, res, next) => {
         jwt.verify(token, process.env.TOKEN_SECRET, async (err, decodedToken) => {
             if (err) {
                 res.locals.user = null;
-                req.user = null; 
+                req.user = null;
                 res.cookie("jwt", "", { maxAge: 1 });
                 next();
             } else {
                 try {
-                    const user = await UserModel.findById(decodedToken.id).select("-password");
+                    const user = await UserModel.findById(decodedToken.id).select("-password")
+                        .populate({
+                            path: "profile",
+                            populate: {
+                                path: "secteur",
+                                model: "secteur"
+                            }
+                        });
                     res.locals.user = user;
                     req.user = user; // clé pour que req.user soit défini
                     next();
@@ -41,7 +48,7 @@ module.exports.requireAuth = (req, res, next) => {
             } else {
                 const user = await UserModel.findById(decodedToken.id);
                 if (!user) return res.status(401).json({ message: "Utilisateur non trouvé" });
-                
+
                 req.user = user; // définit req.user pour le controller
                 next();
             }

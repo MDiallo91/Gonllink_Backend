@@ -29,17 +29,17 @@ function initSocket(io) {
 
         // Réception et envoi d’un message en temps réel
         socket.on("sendMessage", async (data) => {
-            const { expediteur, recepteur, message } = data;
+            const { expediteur, recepteur, message: contenu } = data;
 
             try {
                 // Sauvegarde en DB
-                const message = new chatModel({ expediteur, recepteur, message });
-                await message.save();
+                const msg = new chatModel({ expediteur, recepteur, message: contenu });
+                await msg.save();
 
                 const roomId = [expediteur, recepteur].sort().join("_");
 
                 // Envoyer le message à tous dans la room
-                io.to(roomId).emit("receiveMessage", message);
+                io.to(roomId).emit("receiveMessage", msg);
             } catch (err) {
                 console.error(" Erreur lors de l’envoi du message :", err);
                 socket.emit("errorMessage", { error: "Impossible d’envoyer le message" });

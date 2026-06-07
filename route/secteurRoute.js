@@ -1,7 +1,8 @@
 const router = require("express").Router();
 const secteurController = require("../controller/secteurController")
 
-// Routes 
+// Routes
+router.get('/public', secteurController.getSecteursPublic); // sans auth — page d'accueil
 router.post('/register', secteurController.addSecteur);
 router.get('/getSecteurs', secteurController.getSecteur);
 router.get('/:id', secteurController.secteurById);

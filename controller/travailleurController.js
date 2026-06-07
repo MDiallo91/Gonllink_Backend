@@ -3,14 +3,13 @@ const objectId = require("mongoose").Types.ObjectId
 
 
 module.exports.addTravailleur = async (req, res) => {
-  const { secteur, prenom,nom, user} = req.body;
+  const { secteur, prenom,nom} = req.body;
 
   try {
     const travailleur = await travailleurModel.create({
       nom, 
       prenom,
       secteur,
-      user
     });
 
     return res.status(201).json({message:"Ajout effectuer",statut:200, travailleur });
@@ -24,7 +23,6 @@ module.exports.getTravailleurs = async (req, res) => {
     const travailleur = await travailleurModel
       .find()
       .select("-password")        
-      .populate("user")
       .populate("secteur"); 
          
         

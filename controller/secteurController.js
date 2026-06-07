@@ -19,6 +19,18 @@ module.exports.addSecteur = async (req, res) => {
   }
 };
 
+// Secteurs visibles sur la page d'accueil — sans authentification
+module.exports.getSecteursPublic = async (req, res) => {
+  try {
+    const secteurs = await secteurModel
+      .find({ isActive: true, afficherAccueil: true })
+      .sort({ ordre: 1, createdAt: -1 });
+    res.status(200).json(secteurs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports.getSecteur = async (req,res)=>{
 
     try {

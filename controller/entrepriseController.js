@@ -3,13 +3,13 @@ const objectId = require("mongoose").Types.ObjectId
 
 
 module.exports.addEntreprise = async (req, res) => {
-  const { secteur, nom,user} = req.body;
+  const { secteur, nom} = req.body;
 
   try {
     const entreprise = await entrepriseModel.create({
       nom, 
       secteur,
-      user
+    
     });
 
     return res.status(201).json({message:"Ajout effectuer",statut:200, entreprise });
@@ -23,7 +23,6 @@ module.exports.getEntreprise= async (req,res)=>{
 
     try {
         const entreprise = await entrepriseModel.find()
-        .populate("user","_id email")
         .populate("secteur")
         res.status(200).json(entreprise)
     } catch (error) {
